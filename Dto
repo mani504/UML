@@ -1,0 +1,74 @@
+import lombok.*;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class FlowConfigRequest {
+    private FlowConfigData data;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class FlowConfigData {
+        private String name;
+        private List<TargetDeviceDto> targetDevices;
+        private String email;
+        private String description;
+        private boolean scheduling;
+        private String schedulingCron;
+        private String createBy;
+        private ServiceVerificationDto serviceVerification;
+        private ConfigSettingsDto configSettings;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class TargetDeviceDto {
+        private String id;
+        private String name;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ServiceVerificationDto {
+        private boolean configurationsBackup;
+        private List<String> seviceCheckCommands;
+        private List<String> normalDeterminationCriteria;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ConfigSettingsDto {
+        private List<SwitchConfigurationDto> switchConfiguration;
+        private boolean uplinkRedundancyTest;
+        private boolean rebootDevices;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SwitchConfigurationDto {
+        private String criteria;
+        private String condition;
+    }
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class FlowConfigResponse {
+    private FlowConfigData data;
+    
+    // Reuse the same inner classes from FlowConfigRequest
+    // or create separate ones if response structure differs
+}
