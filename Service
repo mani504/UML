@@ -1,0 +1,125 @@
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class FlowConfigService {
+    private final FlowConfigRepository flowConfigRepository;
+    
+    @Transactional
+    public Long createFlowConfig(FlowConfigRequest request) {
+        FlowConfig flowConfig = mapRequestToEntity(request.getData());
+        FlowConfig savedConfig = flowConfigRepository.save(flowConfig);
+        return savedConfig.getId();
+    }
+    
+    public FlowConfigResponse getFlowConfig(Long id) {
+        FlowConfig flowConfig = flowConfigRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Flow configuration not found with id: " + id));
+        return mapEntityToResponse(flowConfig);
+    }
+    
+    private FlowConfig mapRequestToEntity(FlowConfigRequest.FlowConfigData data) {
+        return FlowConfig.builder()
+            .name(data.getName())
+            .email(data.getEmail())
+            .description(data.getDescription())
+            .scheduling(data.isScheduling())
+            .schedulingCron(data.getSchedulingCron())
+            .createBy(data.getCreateBy())
+            .serviceVerification(mapServiceVerification(data.getServiceVerification()))
+            .configSettings(mapConfigSettings(data.getConfigSettings()))
+            .targetDevices(mapTargetDevices(data.getTargetDevices()))
+            .build();
+    }
+    
+    private ServiceVerification mapServiceVerification(FlowConfigRequest.ServiceVerificationDto dto) {
+        return ServiceVerification.builder()
+            .configurationsBackup(dto.isConfigurationsBackup())
+            .seviceCheckCommands(dto.getSeviceCheckCommands())
+            .normalDeterminationCriteria(dto.getNormalDeterminationCriteria())
+            .build();
+    }
+    
+    private ConfigSettings mapConfigSettings(FlowConfigRequest.ConfigSettingsDto dto) {
+        return ConfigSettings.builder()
+            .switchConfiguration(mapSwitchConfigurations(dto.getSwitchConfiguration()))
+            .uplinkRedundancyTest(dto.isUplinkRedundancyTest())
+            .rebootDevices(dto.isRebootDevices())
+            .build();
+    }
+    
+    private List<TargetDevice> mapTargetDevices(List<FlowConfigRequest.TargetDeviceDto> dtos) {
+        return dtos.stream()
+            .map(dto -> TargetDevice.builder()
+                .deviceId(dto.getId())
+                .name(dto.getName())
+                .build())
+            .toList();
+    }
+    
+    private List<SwitchConfiguration> mapSwitchConfigurations(List<FlowConfigRequest.SwitchConfigurationDto> dtos) {
+        return dtos.stream()
+            .map(dto -> SwitchConfiguration.builder()
+                .criteria(dto.getCriteria())
+                .condition(dto.getCondition())
+                .build())
+            .toList();
+    }
+    
+    private FlowConfigResponse mapEntityToResponse(FlowConfig entity) {
+        FlowConfigResponse response = new FlowConfigResponse();
+        FlowConfigResponse.FlowConfigData data = new FlowConfigResponse.FlowConfigData();
+        
+        // Map all fields from entity to response
+        data.setName(entity.getName());
+        data.setEmail(entity.getEmail());
+        data.setDescription(entity.getDescription());
+        data.setScheduling(entity.isScheduling());
+        data.setSchedulingCron(entity.getSchedulingCron());
+        data.setCreateBy(entity.getCreateBy());
+        
+        // Map service verification
+        FlowConfigResponse.ServiceVerificationDto serviceVerification = new FlowConfigResponse.ServiceVerificationDto();
+        serviceVerification.setConfigurationsBackup(entity.getServiceVerification().isConfigurationsBackup());
+        serviceVerification.setSeviceCheckCommands(entity.getServiceVerification().getSeviceCheckCommands());
+        serviceVerification.setNormalDeterminationCriteria(entity.getServiceVerification().getNormalDeterminationCriteria());
+        data.setServiceVerification(serviceVerification);
+        
+        // Map config settings
+        FlowConfigResponse.ConfigSettingsDto configSettings = new FlowConfigResponse.ConfigSettingsDto();
+        configSettings.setUplinkRedundancyTest(entity.getConfigSettings().isUplinkRedundancyTest());
+        configSettings.setRebootDevices(entity.getConfigSettings().isRebootDevices());
+        configSettings.setSwitchConfiguration(mapSwitchConfigurationsToDto(entity.getConfigSettings().getSwitchConfiguration()));
+        data.setConfigSettings(configSettings);
+        
+        // Map target devices
+        data.setTargetDevices(mapTargetDevicesToDto(entity.getTargetDevices()));
+        
+        response.setData(data);
+        return response;
+    }
+    
+    private List<FlowConfigResponse.SwitchConfigurationDto> mapSwitchConfigurationsToDto(List<SwitchConfiguration> entities) {
+        return entities.stream()
+            .map(entity -> {
+                FlowConfigResponse.SwitchConfigurationDto dto = new FlowConfigResponse.SwitchConfigurationDto();
+                dto.setCriteria(entity.getCriteria());
+                dto.setCondition(entity.getCondition());
+                return dto;
+            })
+            .toList();
+    }
+    
+    private List<FlowConfigResponse.TargetDeviceDto> mapTargetDevicesToDto(List<TargetDevice> entities) {
+        return entities.stream()
+            .map(entity -> {
+                FlowConfigResponse.TargetDeviceDto dto = new FlowConfigResponse.TargetDeviceDto();
+                dto.setId(entity.getDeviceId());
+                dto.setName(entity.getName());
+                return dto;
+            })
+            .toList();
+    }
+}
