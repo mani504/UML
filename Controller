@@ -1,0 +1,30 @@
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/flows")
+@RequiredArgsConstructor
+public class FlowConfigController {
+    private final FlowConfigService flowConfigService;
+    
+    @PostMapping("/ConfigForDevices")
+    public ResponseEntity<Long> createFlowConfig(@RequestBody FlowConfigRequest request) {
+        try {
+            Long id = flowConfigService.createFlowConfig(request);
+            return ResponseEntity.ok(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create flow configuration: " + e.getMessage(), e);
+        }
+    }
+    
+    @GetMapping("/flowConfig/configForDevices/{id}")
+    public ResponseEntity<FlowConfigResponse> getFlowConfig(@PathVariable Long id) {
+        try {
+            FlowConfigResponse response = flowConfigService.getFlowConfig(id);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get flow configuration: " + e.getMessage(), e);
+        }
+    }
+}
