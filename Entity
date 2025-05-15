@@ -1,0 +1,103 @@
+import lombok.*;
+import javax.persistence.*;
+import java.util.List;
+
+@Entity
+@Table(name = "flow_config")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class FlowConfig {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String name;
+    private String email;
+    private String description;
+    private boolean scheduling;
+    private String schedulingCron;
+    private String createBy;
+    
+    @Embedded
+    private ServiceVerification serviceVerification;
+    
+    @Embedded
+    private ConfigSettings configSettings;
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "flow_config_id")
+    private List<TargetDevice> targetDevices;
+}
+
+@Embeddable
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ServiceVerification {
+    private boolean configurationsBackup;
+    
+    @ElementCollection
+    @CollectionTable(name = "service_check_command", joinColumns = @JoinColumn(name = "flow_config_id"))
+    @Column(name = "command")
+    private List<String> seviceCheckCommands;
+    
+    @ElementCollection
+    @CollectionTable(name = "normal_determination_criteria", joinColumns = @JoinColumn(name = "flow_config_id"))
+    @Column(name = "criteria")
+    private List<String> normalDeterminationCriteria;
+}
+
+@Embeddable
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ConfigSettings {
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "flow_config_id")
+    private List<SwitchConfiguration> switchConfiguration;
+    
+    private boolean uplinkRedundancyTest;
+    private boolean rebootDevices;
+}
+
+@Entity
+@Table(name = "target_device")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TargetDevice {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String deviceId;
+    private String name;
+    
+    @ManyToOne
+    @JoinColumn(name = "flow_config_id", insertable = false, updatable = false)
+    private FlowConfig flowConfig;
+}
+
+@Entity
+@Table(name = "switch_configuration")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class SwitchConfiguration {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String criteria;
+    private String condition;
+    
+    @ManyToOne
+    @JoinColumn(name = "flow_config_id", insertable = false, updatable = false)
+    private FlowConfig flowConfig;
+}
